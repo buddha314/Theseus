@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Clientollah v0.1</title>
+
+  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script-->
+  <!--LINK href="css/c3.min.css" rel="stylesheet" type="text/css"-->
+  <script src="js/d3.v5.min.js"></script>
+  <!--script src="js/c3.min.js"></script-->
+  <script src="js/mqtt.js"></script>
+  <script src="js/epochDash.d6.js"></script>
+
+
+</head>
+
+<body>
+  <h1>Let's Make A Client!</h1>
+  <div>don't forget to use python -m SimpleHTTPServer 8000 from the www dir</div>
+  <div id="stage"></div>
+  <div id="epoch-report"></div>
+  <div id="new-chart"></div>
+
+  <script>
+
+    var gph = function(graph) {
+      function dragstarted(d) {
+        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
+      }
+
+      function dragended(d) {
+        if (!d3.event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+
+      console.log("buidling graph");
+      console.log(graph);
+      var svg = d3.select("#stage").append("svg:svg");
+      var width = 800;
+      var height = 500;
+      svg.attr('width', width).attr('height', height);
+
+      var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+      var simulation = d3.forceSimulation()
+          .force("link", d3.forceLink().id(function(d) { return d.id; }))
+          .force("charge", d3.forceManyBody())
+          .force("center", d3.forceCenter(width / 2, height / 2));
+
+      var link = svg.append("g")
+        .attr("class", "link")
+        .selectAll("line")
+        .data(graph.links)
+        .enter().append("line")
+        .attr("stroke-width", function(d) { return Math.sqrt(d.strength); })
+        .attr("stroke", "#999");
+
+      var node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(graph.nodes)
+        .enter().append("circle")
+        .attr("r", 5)
+        .attr("fill", function(d) { return color(d.community); })
+        .attr("class", function(d) {return "v"+d.id;})
+        .classed("node", true)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+    node.append("title")
+        .text(function(d) { return d.name; });
+
+    simulation.nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(graph.links);
+
+
+    function ticked() {
+      link
+          .attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node
+          .attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    }
+
+  }
+  intializeEpochDash();
+
+  var client = mqtt.connect("ws://localhost:8081"); // you add a ws:// url here
+  // subscribe to everything for the moment
+  client.subscribe("+/#");
+
+  client.on('connect', () => {
+    console.log("publishing, I think");
+    client.publish('data/setup', 'feedme');
+  })
+
+  client.on("message", function (topic, payload) {
+    epochDash(topic, payload);
+    if (topic == "/data/goodbye") {
+      var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
+      console.log("goodbye Client " + j);
+    } else if (topic == "/data/graph") {
+      var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
+      gph(j);
+    } else if (topic == "/data/highlight-node") {
+      var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
+      console.log("I should be changing the color of .v" + j.id);
+      d3.selectAll(".node").attr("fill", "white");
+      d3.selectAll(".node").classed("active", false);
+      d3.selectAll(".v" + j.cellId).classed("active", true);
+      d3.selectAll(".active").attr("fill", "red");
+    } else if (topic == "/data/agent") {
+      var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
+      console.log(j);
+    } else {
+      console.log("Else topic");
+    }
+  });
+  </script>
+</body>
+
+</html>
