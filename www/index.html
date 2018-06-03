@@ -3,14 +3,15 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Clientollah v0.1</title>
+  <title>Thesesus</title>
 
   <!--script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script-->
   <!--LINK href="css/c3.min.css" rel="stylesheet" type="text/css"-->
   <script src="js/d3.v5.min.js"></script>
   <!--script src="js/c3.min.js"></script-->
   <script src="js/mqtt.js"></script>
-  <script src="js/epochDash.d6.js"></script>
+  <script src="js/epochDash.js"></script>
+  <script src="js/mazeVis.js"></script>
 
 
 </head>
@@ -18,9 +19,10 @@
 <body>
   <h1>Let's Make A Client!</h1>
   <div>don't forget to use python -m SimpleHTTPServer 8000 from the www dir</div>
+  <div id="maze"></div>
   <div id="stage"></div>
   <div id="epoch-report"></div>
-  <div id="new-chart"></div>
+  <div id="newchart" style="width:800px; height:500px;"></div>
 
   <script>
 
@@ -101,7 +103,7 @@
     }
 
   }
-  intializeEpochDash();
+  //intializeEpochDash();
 
   var client = mqtt.connect("ws://localhost:8081"); // you add a ws:// url here
   // subscribe to everything for the moment
@@ -114,6 +116,9 @@
 
   client.on("message", function (topic, payload) {
     epochDash(topic, payload);
+    if (topic == "/data/graph") {
+      buildMaze('#stage', 500, 800,  payload);
+    }
     if (topic == "/data/goodbye") {
       var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
       console.log("goodbye Client " + j);
