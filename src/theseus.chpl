@@ -87,7 +87,8 @@ proc runWithSloMo(env:Environment, epochs: int, steps:int
         writeln(a);
     }
     if emit && a: AgentDTO != nil {
-      channel.PublishObj("/data/highlight-node", a);
+      //channel.PublishObj("/data/highlight-node", a);
+      channel.PublishObj("/agent/update", a);
       sleep(EPOCH_SLEEP_INTERVAL);
       writeln(a);
     }

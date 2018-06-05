@@ -2,8 +2,8 @@ function buildMaze(div, width, height, payload) {
   var radius = 10;
   var nRows = 10;
   var nCols = 10;
-  var interCircleDistance = 32;
-  var hallBuffer = radius + 2;
+  var interCircleDistance = 64;
+  var hallBuffer = radius + 6;
   var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
 
   var svg = d3.select("#maze").append("svg:svg");
@@ -55,9 +55,9 @@ function buildMaze(div, width, height, payload) {
     .data(j.nodes)
     .enter().append('circle')
     .attr('r', radius)
-    //.attr('cx', function (d) {return interCircleDistance / 2 + ((d.id-1) % nRows) * interCircleDistance})
     .attr('cx', function (d) {return xyFromId(d.id).x})
     .attr('cy', function (d) {return xyFromId(d.id).y})
+    .attr('fill', 'white')
     .attr("class", function(d) {return "v"+d.id;})
     .classed('node', true)
     .classed('active', false);
@@ -80,16 +80,27 @@ function buildMaze(div, width, height, payload) {
     .data(links)
     .enter().append("line")
     .attr("fill", "none")
-    .attr("stroke", "steelblue")
+    .attr("stroke", "#999")
     .attr("stroke-linejoin", "round")
     .attr("stroke-linecap", "round")
     .attr("stroke-width", 1.5)
     .attr("x1", function(d) {return hall(d).x1;})
     .attr("y1", function(d) {return hall(d).y1;})
-    //.attr("x1", function(d) {return xyFromId(d.source).x;})
-    //.attr("y1", function(d) {return xyFromId(d.source).y;})
     .attr("x2", function(d) {return hall(d).x2;})
     .attr("y2", function(d) {return hall(d).y2;})
-    //.attr("x2", function(d) {return xyFromId(d.target).x;})
-    //.attr("y2", function(d) {return xyFromId(d.target).y;})
+}
+
+function updateAgent(topic, payload) {
+  if (topic == '/agent/update') {
+    var j = JSON.parse(new TextDecoder("utf-8").decode(payload));
+    console.log("I should be changing the color of .v" + j.cellId);
+    //d3.selectAll(".node").attr("fill", "white");
+    //d3.selectAll(".node").classed("active", false);
+
+    d3.selectAll(".a" + j.id).attr('fill', 'white');
+    d3.selectAll(".node").classed('.a' + j.id, false);
+    d3.selectAll(".v" + j.cellId).classed(".a" + j.id, true);
+    d3.selectAll('.a' + j.id).attr('fill', 'red');
+    //d3.selectAll(".v" + j.cellId).attr("fill", "red");
+  }
 }

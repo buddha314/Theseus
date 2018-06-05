@@ -7,7 +7,8 @@
 
   <!--script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script-->
   <!--LINK href="css/c3.min.css" rel="stylesheet" type="text/css"-->
-  <script src="js/d3.v5.min.js"></script>
+  <!--script src="js/d3.v5.min.js"></script-->
+  <script src="js/d3.v4.min.js"></script>
   <!--script src="js/c3.min.js"></script-->
   <script src="js/mqtt.js"></script>
   <script src="js/epochDash.js"></script>
@@ -103,7 +104,7 @@
     }
 
   }
-  //intializeEpochDash();
+  intializeEpochDash("hola");
 
   var client = mqtt.connect("ws://localhost:8081"); // you add a ws:// url here
   // subscribe to everything for the moment
@@ -116,6 +117,7 @@
 
   client.on("message", function (topic, payload) {
     epochDash(topic, payload);
+    updateAgent(topic, payload);
     if (topic == "/data/graph") {
       buildMaze('#stage', 500, 800,  payload);
     }
