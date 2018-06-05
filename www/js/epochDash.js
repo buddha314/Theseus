@@ -40,14 +40,18 @@ function intializeEpochDash(payload) {
   ]
 
     // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.epoch; }));
-    y.domain([0, d3.max(data, function(d) { return d.steps; })]);
+    //x.domain(d3.extent(data, function(d) { return d.epoch; }));
+    //y.domain([0, d3.max(data, function(d) { return d.steps; })]);
+    x.domain([1, 4]);
+    y.domain([0, 50]);
 
     // Add the valueline path.
+    /*
     svg.append("path")
         .data([data])
         .attr("class", "line")
         .attr("d", valueline);
+        */
 
     // Add the X Axis
     svg.append("g")
